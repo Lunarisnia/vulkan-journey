@@ -1,13 +1,12 @@
 #include "first-triangle/app.hpp"
-#include "print"
 #include <exception>
-#include <print>
+#include <iostream>
 
 int main() {
   try {
     FirstTriangle::App firstTriangleApp;
-    firstTriangleApp.Init();
-  } catch (const std::exception &error) {
-    std::println("%s", error.what());
+    firstTriangleApp.Run();
+  } catch (const std::exception& error) {
+    std::cerr << error.what() << std::endl;
   }
 }
