@@ -13,6 +13,16 @@ namespace FirstTriangle {
 constexpr uint32_t WIDTH = 800;
 constexpr uint32_t HEIGHT = 600;
 
+const std::vector<char const*> validationLayers = {
+    "VK_LAYER_KHRONOS_validation",
+};
+
+#ifdef NDEBUG
+constexpr bool enableValidationLayers = false;
+#else
+constexpr bool enableValidationLayers = true;
+#endif
+
 class App {
  private:
   GLFWwindow* window;

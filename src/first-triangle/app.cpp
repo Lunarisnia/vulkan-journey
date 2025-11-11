@@ -65,6 +65,28 @@ void FirstTriangle::App::createInstance() {
   }
   requiredExtensions.emplace_back(vk::KHRPortabilityEnumerationExtensionName);
 
+  std::vector<const char*> requiredLayers;
+  if (enableValidationLayers) {
+    requiredLayers.assign(validationLayers.begin(), validationLayers.end());
+  }
+
+  std::vector<vk::LayerProperties> supportedLayers =
+      context.enumerateInstanceLayerProperties();
+  for (const char*& requiredLayer : requiredLayers) {
+    bool found = false;
+    for (const vk::LayerProperties& layer : supportedLayers) {
+      if (strcmp(requiredLayer, layer.layerName) == 0) {
+        found = true;
+        break;
+      }
+    }
+
+    if (!found) {
+      throw std::runtime_error("Required validation layers not supported: " +
+                               std::string(requiredLayer));
+    }
+  }
+
   vk::InstanceCreateInfo createInfo{
       .flags = vk::InstanceCreateFlagBits::eEnumeratePortabilityKHR,
       .pApplicationInfo = &appInfo,
