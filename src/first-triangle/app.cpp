@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include "GLFW/glfw3.h"
+#include "VkBootstrap.h"
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_enums.hpp"
 #include "vulkan/vulkan_structs.hpp"
@@ -31,6 +32,7 @@ void FirstTriangle::App::initWindow() {
 void FirstTriangle::App::initVulkan() { createInstance(); }
 
 void FirstTriangle::App::createInstance() {
+  vkb::InstanceBuilder builder;
   constexpr vk::ApplicationInfo appInfo{
       .pApplicationName = "Hello, Triangle",
       .applicationVersion = VK_MAKE_VERSION(1, 0, 0),
@@ -90,6 +92,7 @@ void FirstTriangle::App::createInstance() {
   vk::InstanceCreateInfo createInfo{
       .flags = vk::InstanceCreateFlagBits::eEnumeratePortabilityKHR,
       .pApplicationInfo = &appInfo,
+      .ppEnabledLayerNames = requiredLayers.data(),
       .enabledExtensionCount = (uint32_t)requiredExtensions.size(),
       .ppEnabledExtensionNames = requiredExtensions.data(),
   };
