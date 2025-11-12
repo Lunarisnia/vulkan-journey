@@ -7,6 +7,10 @@ add_executable(${PROJECT_NAME}
 
 	first-triangle/app.cpp
 
+	# Second triangle
+	second-triangle/second-triangle.cpp
+	second-triangle/vk-engine.cpp
+
 	# core/shader/shader.cpp
 
 	# Imgui
