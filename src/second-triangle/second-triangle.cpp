@@ -5,10 +5,14 @@
 
 void SecondTriangle::Run() {
   try {
-    VulkanEngine vkEngine;
     vkEngine.Init();
   } catch (std::exception& error) {
     fmt::println("Error: {}", error.what());
     throw error;
   }
+}
+
+SecondTriangle::~SecondTriangle() {
+  fmt::println("Cleaning up!");
+  vkEngine.Cleanup();
 }

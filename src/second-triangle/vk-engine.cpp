@@ -3,7 +3,7 @@
 #include "SDL_video.h"
 #include "SDL_vulkan.h"
 #include "VkBootstrap.h"
-#include "vulkan/vulkan.hpp"
+#include "vulkan/vulkan_core.h"
 void VulkanEngine::Init() {
   initWindow();
   initVulkan();
@@ -12,6 +12,26 @@ void VulkanEngine::Init() {
   initSyncStructures();
 
   initialized = true;
+}
+
+void VulkanEngine::Cleanup() {
+  if (initialized) {
+    // Destroy swapchain
+    destroySwapchain();
+
+    // Destroy surface
+    vkDestroySurfaceKHR(instance, surface, nullptr);
+    // Destroy device
+    vkDestroyDevice(device, nullptr);
+
+    // Destroy extensions
+    vkb::destroy_debug_utils_messenger(instance, debugMessenger, nullptr);
+
+    // Destroy instance
+    vkDestroyInstance(instance, nullptr);
+    // Destroy window
+    SDL_DestroyWindow(window);
+  }
 }
 
 void VulkanEngine::initWindow() {
@@ -70,7 +90,40 @@ void VulkanEngine::initVulkan() {
   chosenGPU = physicalDevice.physical_device;
 }
 
-void VulkanEngine::initSwapchain() {}
+void VulkanEngine::createSwapchain(uint32_t width, uint32_t height) {
+  vkb::SwapchainBuilder swapchainBuilder{chosenGPU, device, surface};
+
+  swapchainImageFormat = VK_FORMAT_B8G8R8A8_UNORM;
+
+  vkb::Swapchain vkbSwapchain =
+      swapchainBuilder
+          .set_desired_format(
+              VkSurfaceFormatKHR{.format = swapchainImageFormat})
+          .set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR)
+          .set_desired_extent(width, height)
+          .add_image_usage_flags(VK_IMAGE_USAGE_TRANSFER_DST_BIT)
+          .build()
+          .value();
+
+  swapchainExtent = vkbSwapchain.extent;
+  swapchain = vkbSwapchain.swapchain;
+
+  swapchainImages = vkbSwapchain.get_images().value();
+  swapchainImageViews = vkbSwapchain.get_image_views().value();
+}
+
+void VulkanEngine::destroySwapchain() {
+  vkDestroySwapchainKHR(device, swapchain, nullptr);
+
+  // destroy swapchain resources
+  for (int i = 0; i < swapchainImageViews.size(); i++) {
+    vkDestroyImageView(device, swapchainImageViews[i], nullptr);
+  }
+}
+
+void VulkanEngine::initSwapchain() {
+  createSwapchain(windowExtent.width, windowExtent.height);
+}
 
 void VulkanEngine::initCommand() {}
 
