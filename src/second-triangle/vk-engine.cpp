@@ -16,6 +16,12 @@ void VulkanEngine::Init() {
 
 void VulkanEngine::Cleanup() {
   if (initialized) {
+    vkDeviceWaitIdle(device);
+
+    for (FrameData& frame : frames) {
+      vkDestroyCommandPool(device, frame.commandPool, nullptr);
+    }
+
     // Destroy swapchain
     destroySwapchain();
 
@@ -32,6 +38,10 @@ void VulkanEngine::Cleanup() {
     // Destroy window
     SDL_DestroyWindow(window);
   }
+}
+
+FrameData& VulkanEngine::GetCurrentFrame() {
+  return frames[frameNumber % FRAME_OVERLAP];
 }
 
 void VulkanEngine::initWindow() {
@@ -88,6 +98,11 @@ void VulkanEngine::initVulkan() {
 
   device = vkbDevice.device;
   chosenGPU = physicalDevice.physical_device;
+
+  // use vkbootstrap to get a Graphics queue
+  graphicsQueue = vkbDevice.get_queue(vkb::QueueType::graphics).value();
+  graphicsQueueFamily =
+      vkbDevice.get_queue_index(vkb::QueueType::graphics).value();
 }
 
 void VulkanEngine::createSwapchain(uint32_t width, uint32_t height) {
@@ -125,6 +140,27 @@ void VulkanEngine::initSwapchain() {
   createSwapchain(windowExtent.width, windowExtent.height);
 }
 
-void VulkanEngine::initCommand() {}
+void VulkanEngine::initCommand() {
+  VkCommandPoolCreateInfo commandPoolInfo = {};
+  commandPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+  commandPoolInfo.pNext = nullptr;
+  commandPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+  commandPoolInfo.queueFamilyIndex = graphicsQueueFamily;
+
+  for (int i = 0; i < FRAME_OVERLAP; i++) {
+    vkCreateCommandPool(device, &commandPoolInfo, nullptr,
+                        &frames[i].commandPool);
+    // allocate the default command buffer that we will use for rendering
+    VkCommandBufferAllocateInfo cmdAllocInfo = {};
+    cmdAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    cmdAllocInfo.pNext = nullptr;
+    cmdAllocInfo.commandPool = frames[i].commandPool;
+    cmdAllocInfo.commandBufferCount = 1;
+    cmdAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+
+    vkAllocateCommandBuffers(device, &cmdAllocInfo,
+                             &frames[i].mainCommandBuffer);
+  }
+}
 
 void VulkanEngine::initSyncStructures() {}

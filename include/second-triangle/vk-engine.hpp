@@ -2,6 +2,13 @@
 #include <vulkan/vulkan_core.h>
 #include <vector>
 #include "SDL_video.h"
+struct FrameData {
+  VkCommandPool commandPool;
+  VkCommandBuffer mainCommandBuffer;
+};
+
+constexpr unsigned int FRAME_OVERLAP = 2;
+
 class VulkanEngine {
  public:
   VkExtent2D windowExtent{1700, 900};
@@ -20,10 +27,17 @@ class VulkanEngine {
   VkSwapchainKHR swapchain;
   std::vector<VkImage> swapchainImages;
   std::vector<VkImageView> swapchainImageViews;
+  unsigned int frameNumber;
+
+  FrameData frames[FRAME_OVERLAP];
+
+  VkQueue graphicsQueue;
+  uint32_t graphicsQueueFamily;
 
  public:
   void Init();
   void Cleanup();
+  FrameData& GetCurrentFrame();
 
  private:
   void initWindow();
