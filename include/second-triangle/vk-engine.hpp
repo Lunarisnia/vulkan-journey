@@ -5,6 +5,10 @@
 struct FrameData {
   VkCommandPool commandPool;
   VkCommandBuffer mainCommandBuffer;
+
+  VkSemaphore swapchainSemaphore;
+  VkSemaphore renderSemaphore;
+  VkFence renderFence;
 };
 
 constexpr unsigned int FRAME_OVERLAP = 2;
@@ -38,6 +42,7 @@ class VulkanEngine {
   void Init();
   void Cleanup();
   FrameData& GetCurrentFrame();
+  void Draw();
 
  private:
   void initWindow();

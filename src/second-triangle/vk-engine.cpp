@@ -1,8 +1,11 @@
 #include "second-triangle/vk-engine.hpp"
+#include <cstdint>
 #include "SDL.h"
 #include "SDL_video.h"
 #include "SDL_vulkan.h"
 #include "VkBootstrap.h"
+#include "second-triangle/vk-image.hpp"
+#include "second-triangle/vk-initializer.hpp"
 #include "vulkan/vulkan_core.h"
 void VulkanEngine::Init() {
   initWindow();
@@ -19,6 +22,9 @@ void VulkanEngine::Cleanup() {
     vkDeviceWaitIdle(device);
 
     for (FrameData& frame : frames) {
+      vkDestroySemaphore(device, frame.renderSemaphore, nullptr);
+      vkDestroySemaphore(device, frame.swapchainSemaphore, nullptr);
+      vkDestroyFence(device, frame.renderFence, nullptr);
       vkDestroyCommandPool(device, frame.commandPool, nullptr);
     }
 
@@ -38,6 +44,51 @@ void VulkanEngine::Cleanup() {
     // Destroy window
     SDL_DestroyWindow(window);
   }
+}
+
+void VulkanEngine::Draw() {
+  FrameData currentFrame = GetCurrentFrame();
+
+  vkWaitForFences(device, 1, &currentFrame.renderFence, true, 1000000000);
+  vkResetFences(device, 1, &currentFrame.renderFence);
+
+  uint32_t swapchainImageIndex;
+  vkAcquireNextImageKHR(device, swapchain, 1000000000,
+                        currentFrame.swapchainSemaphore, nullptr,
+                        &swapchainImageIndex);
+
+  VkCommandBuffer cmd = currentFrame.mainCommandBuffer;
+
+  vkResetCommandBuffer(cmd, 0);
+
+  VkCommandBufferBeginInfo cmdBeginInfo = VulkanInit::CommandBufferBeginInfo(
+      VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+
+  vkBeginCommandBuffer(cmd, &cmdBeginInfo);
+
+  VulkanImage::TransitionImage(cmd, swapchainImages[swapchainImageIndex],
+                               VK_IMAGE_LAYOUT_UNDEFINED,
+                               VK_IMAGE_LAYOUT_GENERAL);
+  // make a clear-color from frame number. This will flash with a 120 frame
+  // period.
+  VkClearColorValue clearValue;
+  float flash = std::abs(std::sin(frameNumber / 120.f));
+  clearValue = {{0.0f, 0.0f, flash, 1.0f}};
+
+  VkImageSubresourceRange clearRange =
+      VulkanInit::ImageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT);
+
+  // clear image
+  vkCmdClearColorImage(cmd, swapchainImages[swapchainImageIndex],
+                       VK_IMAGE_LAYOUT_GENERAL, &clearValue, 1, &clearRange);
+  // make the swapchain image into presentable mode
+  VulkanImage::TransitionImage(cmd, swapchainImages[swapchainImageIndex],
+                               VK_IMAGE_LAYOUT_GENERAL,
+                               VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+
+  // finalize the command buffer (we can no longer add commands, but it can now
+  // be executed)
+  vkEndCommandBuffer(cmd);
 }
 
 FrameData& VulkanEngine::GetCurrentFrame() {
@@ -163,4 +214,17 @@ void VulkanEngine::initCommand() {
   }
 }
 
-void VulkanEngine::initSyncStructures() {}
+void VulkanEngine::initSyncStructures() {
+  VkFenceCreateInfo fenceCreateInfo =
+      VulkanInit::FenceCreateInfo(VK_FENCE_CREATE_SIGNALED_BIT);
+  VkSemaphoreCreateInfo semaphoreCreateInfo = VulkanInit::SemaphoreCreateInfo();
+
+  for (int i = 0; i < FRAME_OVERLAP; i++) {
+    vkCreateFence(device, &fenceCreateInfo, nullptr, &frames[i].renderFence);
+
+    vkCreateSemaphore(device, &semaphoreCreateInfo, nullptr,
+                      &frames[i].swapchainSemaphore);
+    vkCreateSemaphore(device, &semaphoreCreateInfo, nullptr,
+                      &frames[i].renderSemaphore);
+  }
+}

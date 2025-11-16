@@ -10,6 +10,8 @@ add_executable(${PROJECT_NAME}
 	# Second triangle
 	second-triangle/second-triangle.cpp
 	second-triangle/vk-engine.cpp
+	second-triangle/vk-initializer.cpp
+	second-triangle/vk-image.cpp
 
 	# core/shader/shader.cpp
 
