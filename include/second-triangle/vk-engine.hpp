@@ -7,7 +7,6 @@ struct FrameData {
   VkCommandBuffer mainCommandBuffer;
 
   VkSemaphore swapchainSemaphore;
-  VkSemaphore renderSemaphore;
   VkFence renderFence;
 };
 
@@ -15,7 +14,7 @@ constexpr unsigned int FRAME_OVERLAP = 2;
 
 class VulkanEngine {
  public:
-  VkExtent2D windowExtent{1700, 900};
+  VkExtent2D windowExtent{800, 600};
   bool bUseValidationLayer = true;
 
  private:
@@ -32,7 +31,8 @@ class VulkanEngine {
   VkSwapchainKHR swapchain;
   std::vector<VkImage> swapchainImages;
   std::vector<VkImageView> swapchainImageViews;
-  unsigned int frameNumber;
+  std::vector<VkSemaphore> renderSemaphores;
+  unsigned int frameNumber = 0;
 
   FrameData frames[FRAME_OVERLAP];
 

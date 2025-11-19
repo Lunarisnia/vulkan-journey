@@ -57,8 +57,10 @@ void VulkanEngine::Cleanup() {
       vkDestroyCommandPool(device, frame.commandPool, nullptr);
 
       vkDestroyFence(device, frame.renderFence, nullptr);
-      vkDestroySemaphore(device, frame.renderSemaphore, nullptr);
       vkDestroySemaphore(device, frame.swapchainSemaphore, nullptr);
+    }
+    for (uint32_t i = 0; i < swapchainImages.size(); i++) {
+      vkDestroySemaphore(device, renderSemaphores[i], nullptr);
     }
 
     // Destroy swapchain
@@ -128,13 +130,17 @@ void VulkanEngine::Draw() {
   // when the swapchain is ready we will signal the _renderSemaphore, to signal
   // that rendering has finished
 
+  // NOTE: use render semaphore that is guaranteed to be available by indexing
+  // it with the swapchainImageIndex
+  VkSemaphore renderSemaphore = renderSemaphores[swapchainImageIndex];
+
   VkCommandBufferSubmitInfo cmdinfo = VulkanInit::CommandBufferSubmitInfo(cmd);
 
   VkSemaphoreSubmitInfo waitInfo = VulkanInit::SemaphoreSubmitInfo(
       VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT_KHR,
       currentFrame.swapchainSemaphore);
   VkSemaphoreSubmitInfo signalInfo = VulkanInit::SemaphoreSubmitInfo(
-      VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT, currentFrame.renderSemaphore);
+      VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT, renderSemaphore);
 
   VkSubmitInfo2 submit =
       VulkanInit::SubmitInfo(&cmdinfo, &signalInfo, &waitInfo);
@@ -149,7 +155,7 @@ void VulkanEngine::Draw() {
   presentInfo.pSwapchains = &swapchain;
   presentInfo.swapchainCount = 1;
 
-  presentInfo.pWaitSemaphores = &currentFrame.renderSemaphore;
+  presentInfo.pWaitSemaphores = &renderSemaphore;
   presentInfo.waitSemaphoreCount = 1;
 
   presentInfo.pImageIndices = &swapchainImageIndex;
@@ -293,7 +299,12 @@ void VulkanEngine::initSyncStructures() {
 
     vkCreateSemaphore(device, &semaphoreCreateInfo, nullptr,
                       &frames[i].swapchainSemaphore);
+  }
+
+  renderSemaphores.resize(swapchainImages.size());
+
+  for (uint32_t i = 0; i < swapchainImages.size(); i++) {
     vkCreateSemaphore(device, &semaphoreCreateInfo, nullptr,
-                      &frames[i].renderSemaphore);
+                      &renderSemaphores[i]);
   }
 }
