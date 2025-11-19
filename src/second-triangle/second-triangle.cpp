@@ -6,6 +6,7 @@
 void SecondTriangle::Run() {
   try {
     vkEngine.Init();
+    vkEngine.Run();
   } catch (std::exception& error) {
     fmt::println("Error: {}", error.what());
     throw error;

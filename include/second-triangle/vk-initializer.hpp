@@ -9,4 +9,10 @@ class VulkanInit {
       VkCommandBufferUsageFlags flags = 0);
   static VkImageSubresourceRange ImageSubresourceRange(
       VkImageAspectFlags aspectMask);
+  static VkSemaphoreSubmitInfo SemaphoreSubmitInfo(
+      VkPipelineStageFlags2 stageMask, VkSemaphore semaphore);
+  static VkCommandBufferSubmitInfo CommandBufferSubmitInfo(VkCommandBuffer cmd);
+  static VkSubmitInfo2 SubmitInfo(VkCommandBufferSubmitInfo* cmd,
+                                  VkSemaphoreSubmitInfo* signalSemaphoreInfo,
+                                  VkSemaphoreSubmitInfo* waitSemaphoreInfo);
 };

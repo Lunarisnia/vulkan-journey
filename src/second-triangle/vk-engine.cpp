@@ -1,6 +1,7 @@
 #include "second-triangle/vk-engine.hpp"
 #include <cstdint>
 #include "SDL.h"
+#include <thread>
 #include "SDL_video.h"
 #include "SDL_vulkan.h"
 #include "VkBootstrap.h"
@@ -17,15 +18,47 @@ void VulkanEngine::Init() {
   initialized = true;
 }
 
+void VulkanEngine::Run() {
+  SDL_Event e;
+  bool bQuit = false;
+
+  // main loop
+  while (!bQuit) {
+    // Handle events on queue
+    while (SDL_PollEvent(&e) != 0) {
+      // close the window when user alt-f4s or clicks the X button
+      if (e.type == SDL_QUIT) bQuit = true;
+
+      if (e.type == SDL_WINDOWEVENT) {
+        if (e.window.event == SDL_WINDOWEVENT_MINIMIZED) {
+          stopRendering = true;
+        }
+        if (e.window.event == SDL_WINDOWEVENT_RESTORED) {
+          stopRendering = false;
+        }
+      }
+    }
+
+    // do not draw if we are minimized
+    if (stopRendering) {
+      // throttle the speed to avoid the endless spinning
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    } else {
+      Draw();
+    }
+  }
+}
+
 void VulkanEngine::Cleanup() {
   if (initialized) {
     vkDeviceWaitIdle(device);
 
     for (FrameData& frame : frames) {
+      vkDestroyCommandPool(device, frame.commandPool, nullptr);
+
+      vkDestroyFence(device, frame.renderFence, nullptr);
       vkDestroySemaphore(device, frame.renderSemaphore, nullptr);
       vkDestroySemaphore(device, frame.swapchainSemaphore, nullptr);
-      vkDestroyFence(device, frame.renderFence, nullptr);
-      vkDestroyCommandPool(device, frame.commandPool, nullptr);
     }
 
     // Destroy swapchain
@@ -89,6 +122,42 @@ void VulkanEngine::Draw() {
   // finalize the command buffer (we can no longer add commands, but it can now
   // be executed)
   vkEndCommandBuffer(cmd);
+
+  // prepare the submission to the queue.
+  // we want to wait on the _swapchainSemaphore, as that semaphore is signaled
+  // when the swapchain is ready we will signal the _renderSemaphore, to signal
+  // that rendering has finished
+
+  VkCommandBufferSubmitInfo cmdinfo = VulkanInit::CommandBufferSubmitInfo(cmd);
+
+  VkSemaphoreSubmitInfo waitInfo = VulkanInit::SemaphoreSubmitInfo(
+      VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT_KHR,
+      currentFrame.swapchainSemaphore);
+  VkSemaphoreSubmitInfo signalInfo = VulkanInit::SemaphoreSubmitInfo(
+      VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT, currentFrame.renderSemaphore);
+
+  VkSubmitInfo2 submit =
+      VulkanInit::SubmitInfo(&cmdinfo, &signalInfo, &waitInfo);
+
+  // submit command buffer to the queue and execute it.
+  //  _renderFence will now block until the graphic commands finish execution
+  vkQueueSubmit2(graphicsQueue, 1, &submit, currentFrame.renderFence);
+
+  VkPresentInfoKHR presentInfo = {};
+  presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+  presentInfo.pNext = nullptr;
+  presentInfo.pSwapchains = &swapchain;
+  presentInfo.swapchainCount = 1;
+
+  presentInfo.pWaitSemaphores = &currentFrame.renderSemaphore;
+  presentInfo.waitSemaphoreCount = 1;
+
+  presentInfo.pImageIndices = &swapchainImageIndex;
+
+  vkQueuePresentKHR(graphicsQueue, &presentInfo);
+
+  // increase the number of frames drawn
+  frameNumber++;
 }
 
 FrameData& VulkanEngine::GetCurrentFrame() {

@@ -19,6 +19,7 @@ class VulkanEngine {
   bool bUseValidationLayer = true;
 
  private:
+  bool stopRendering;
   SDL_Window* window;
   bool initialized;
   VkInstance instance;
@@ -40,6 +41,7 @@ class VulkanEngine {
 
  public:
   void Init();
+  void Run();
   void Cleanup();
   FrameData& GetCurrentFrame();
   void Draw();
