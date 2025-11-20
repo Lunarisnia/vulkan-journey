@@ -6,8 +6,8 @@ void DeletionQueue::PushFunction(std::function<void()>&& callback) {
 }
 
 void DeletionQueue::Flush() {
-  for (std::function<void()>& callback : deletors) {
-    callback();
+  for (auto it = deletors.rbegin(); it != deletors.rend(); it++) {
+    (*it)();  // call functors
   }
 
   deletors.clear();

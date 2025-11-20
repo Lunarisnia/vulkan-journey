@@ -1,4 +1,5 @@
 #pragma once
+#include <vma/vk_mem_alloc.h>
 #include <vulkan/vulkan_core.h>
 #include <vector>
 #include "SDL_video.h"
@@ -13,6 +14,14 @@ struct FrameData {
   DeletionQueue deletionQueue;
 };
 
+struct AllocatedImage {
+  VkImage image;
+  VkImageView imageView;
+  VmaAllocation allocation;
+  VkExtent3D imageExtent;
+  VkFormat imageFormat;
+};
+
 constexpr unsigned int FRAME_OVERLAP = 2;
 
 class VulkanEngine {
@@ -21,6 +30,10 @@ class VulkanEngine {
   bool bUseValidationLayer = true;
 
  private:
+  AllocatedImage drawImage;
+  VkExtent2D drawExtent;
+  VmaAllocator allocator;
+
   bool stopRendering;
   SDL_Window* window;
   bool initialized;

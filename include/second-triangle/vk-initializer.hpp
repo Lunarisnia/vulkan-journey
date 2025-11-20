@@ -15,4 +15,9 @@ class VulkanInit {
   static VkSubmitInfo2 SubmitInfo(VkCommandBufferSubmitInfo* cmd,
                                   VkSemaphoreSubmitInfo* signalSemaphoreInfo,
                                   VkSemaphoreSubmitInfo* waitSemaphoreInfo);
+  static VkImageCreateInfo ImageCreateInfo(VkFormat format,
+                                           VkImageUsageFlags usageFlags,
+                                           VkExtent3D extent);
+  static VkImageViewCreateInfo ImageViewCreateInfo(
+      VkFormat format, VkImage image, VkImageAspectFlags aspectFlags);
 };
