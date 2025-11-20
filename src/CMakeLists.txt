@@ -12,6 +12,7 @@ add_executable(${PROJECT_NAME}
 	second-triangle/vk-engine.cpp
 	second-triangle/vk-initializer.cpp
 	second-triangle/vk-image.cpp
+	second-triangle/deletion-queue.cpp
 
 	# core/shader/shader.cpp
 

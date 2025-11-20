@@ -2,12 +2,15 @@
 #include <vulkan/vulkan_core.h>
 #include <vector>
 #include "SDL_video.h"
+#include "second-triangle/deletion-queue.hpp"
 struct FrameData {
   VkCommandPool commandPool;
   VkCommandBuffer mainCommandBuffer;
 
   VkSemaphore swapchainSemaphore;
   VkFence renderFence;
+
+  DeletionQueue deletionQueue;
 };
 
 constexpr unsigned int FRAME_OVERLAP = 2;
@@ -38,6 +41,8 @@ class VulkanEngine {
 
   VkQueue graphicsQueue;
   uint32_t graphicsQueueFamily;
+
+  DeletionQueue deletionQueue;
 
  public:
   void Init();

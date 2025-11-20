@@ -58,7 +58,12 @@ void VulkanEngine::Cleanup() {
 
       vkDestroyFence(device, frame.renderFence, nullptr);
       vkDestroySemaphore(device, frame.swapchainSemaphore, nullptr);
+
+      frame.deletionQueue.Flush();
     }
+
+    deletionQueue.Flush();
+
     for (uint32_t i = 0; i < swapchainImages.size(); i++) {
       vkDestroySemaphore(device, renderSemaphores[i], nullptr);
     }
@@ -86,6 +91,8 @@ void VulkanEngine::Draw() {
 
   vkWaitForFences(device, 1, &currentFrame.renderFence, true, 1000000000);
   vkResetFences(device, 1, &currentFrame.renderFence);
+
+  currentFrame.deletionQueue.Flush();
 
   uint32_t swapchainImageIndex;
   vkAcquireNextImageKHR(device, swapchain, 1000000000,
