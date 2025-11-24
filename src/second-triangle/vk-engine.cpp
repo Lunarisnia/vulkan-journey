@@ -108,28 +108,29 @@ void VulkanEngine::Draw() {
 
   vkBeginCommandBuffer(cmd, &cmdBeginInfo);
 
+  // This render to a render target then copy the image to the presentable
+  // swapchain
+  VulkanImage::TransitionImage(cmd, drawImage.image, VK_IMAGE_LAYOUT_UNDEFINED,
+                               VK_IMAGE_LAYOUT_GENERAL);
+  drawBackground(cmd);
+  // make the swapchain image into presentable mode
+  VulkanImage::TransitionImage(cmd, drawImage.image, VK_IMAGE_LAYOUT_GENERAL,
+                               VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
   VulkanImage::TransitionImage(cmd, swapchainImages[swapchainImageIndex],
                                VK_IMAGE_LAYOUT_UNDEFINED,
-                               VK_IMAGE_LAYOUT_GENERAL);
-  // make a clear-color from frame number. This will flash with a 120 frame
-  // period.
-  VkClearColorValue clearValue;
-  float flash = std::abs(std::sin(frameNumber / 120.f));
-  clearValue = {{0.0f, 0.0f, flash, 1.0f}};
+                               VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
-  VkImageSubresourceRange clearRange =
-      VulkanInit::ImageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT);
+  // Copy the image to the swapchain
+  VulkanImage::BlitImage(cmd, drawImage.image,
+                         swapchainImages[swapchainImageIndex], drawExtent,
+                         swapchainExtent);
 
-  // clear image
-  vkCmdClearColorImage(cmd, swapchainImages[swapchainImageIndex],
-                       VK_IMAGE_LAYOUT_GENERAL, &clearValue, 1, &clearRange);
-  // make the swapchain image into presentable mode
   VulkanImage::TransitionImage(cmd, swapchainImages[swapchainImageIndex],
-                               VK_IMAGE_LAYOUT_GENERAL,
+                               VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                                VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
 
-  // finalize the command buffer (we can no longer add commands, but it can now
-  // be executed)
+  // finalize the command buffer (we can no longer add commands, but it can
+  // now be executed)
   vkEndCommandBuffer(cmd);
 
   // prepare the submission to the queue.
@@ -171,6 +172,21 @@ void VulkanEngine::Draw() {
 
   // increase the number of frames drawn
   frameNumber++;
+}
+
+void VulkanEngine::drawBackground(VkCommandBuffer cmd) {
+  // make a clear-color from frame number. This will flash with a 120 frame
+  // period.
+  VkClearColorValue clearValue;
+  float flash = std::abs(std::sin(frameNumber / 120.f));
+  clearValue = {{0.0f, 0.0f, flash, 1.0f}};
+
+  VkImageSubresourceRange clearRange =
+      VulkanInit::ImageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT);
+
+  // clear image
+  vkCmdClearColorImage(cmd, drawImage.image, VK_IMAGE_LAYOUT_GENERAL,
+                       &clearValue, 1, &clearRange);
 }
 
 FrameData& VulkanEngine::GetCurrentFrame() {

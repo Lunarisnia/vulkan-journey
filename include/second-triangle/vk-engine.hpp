@@ -74,4 +74,5 @@ class VulkanEngine {
  private:
   void createSwapchain(uint32_t width, uint32_t height);
   void destroySwapchain();
+  void drawBackground(VkCommandBuffer cmd);
 };
