@@ -4,6 +4,7 @@
 #include <vector>
 #include "SDL_video.h"
 #include "second-triangle/deletion-queue.hpp"
+#include "second-triangle/vk-descriptors.hpp"
 struct FrameData {
   VkCommandPool commandPool;
   VkCommandBuffer mainCommandBuffer;
@@ -57,6 +58,10 @@ class VulkanEngine {
 
   DeletionQueue deletionQueue;
 
+  DescriptorAllocator globalDescriptorAllocator;
+  VkDescriptorSet drawImageDescriptors;
+  VkDescriptorSetLayout drawImageDescriptorLayout;
+
  public:
   void Init();
   void Run();
@@ -70,6 +75,7 @@ class VulkanEngine {
   void initSwapchain();
   void initCommand();
   void initSyncStructures();
+  void initDescriptors();
 
  private:
   void createSwapchain(uint32_t width, uint32_t height);
