@@ -54,3 +54,4 @@ add_custom_target(
     DEPENDS ${SPIRV_BINARY_FILES}
 	COMMENT "Compiling shaders to SPIR-V"
     )
+

@@ -385,6 +385,9 @@ void VulkanEngine::initDescriptors() {
 
   globalDescriptorAllocator.InitPool(device, 10, sizes);
 
+  // TODO: need to experiment on adding another binding for texture on a
+  // different index later
+
   // make the descriptor set layout for our compute draw
   {
     DescriptorLayoutBuilder builder;

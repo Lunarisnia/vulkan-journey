@@ -15,6 +15,7 @@ add_executable(${PROJECT_NAME}
 	second-triangle/deletion-queue.cpp
 	second-triangle/vma-usage.cpp
 	second-triangle/vk-descriptors.cpp
+	second-triangle/vk-pipelines.cpp
 
 	# core/shader/shader.cpp
 
