@@ -29,6 +29,8 @@ class VulkanEngine {
  public:
   VkExtent2D windowExtent{800, 600};
   bool bUseValidationLayer = true;
+  VkPipeline gradientPipeline;
+  VkPipelineLayout gradientPipelineLayout;
 
  private:
   AllocatedImage drawImage;
@@ -76,6 +78,8 @@ class VulkanEngine {
   void initCommand();
   void initSyncStructures();
   void initDescriptors();
+  void initPipelines();
+  void initBackgroundPipelines();
 
  private:
   void createSwapchain(uint32_t width, uint32_t height);
