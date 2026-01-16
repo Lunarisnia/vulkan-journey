@@ -28,6 +28,8 @@ add_executable(${PROJECT_NAME}
 
 # inlcude
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/include)
+# VMA include
+target_include_directories(${PROJECT_NAME} PUBLIC vendor/vma)
 # imgui include
 # target_include_directories(${PROJECT_NAME} PUBLIC vendor/imgui)
 

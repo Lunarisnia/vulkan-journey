@@ -1,10 +1,10 @@
 #pragma once
-#include <vma/vk_mem_alloc.h>
-#include <vulkan/vulkan_core.h>
-#include <vector>
 #include "SDL_video.h"
 #include "second-triangle/deletion-queue.hpp"
 #include "second-triangle/vk-descriptors.hpp"
+#include "vk_mem_alloc.h"
+#include <vector>
+#include <vulkan/vulkan_core.h>
 struct FrameData {
   VkCommandPool commandPool;
   VkCommandBuffer mainCommandBuffer;
@@ -26,19 +26,19 @@ struct AllocatedImage {
 constexpr unsigned int FRAME_OVERLAP = 2;
 
 class VulkanEngine {
- public:
+public:
   VkExtent2D windowExtent{800, 600};
   bool bUseValidationLayer = true;
   VkPipeline gradientPipeline;
   VkPipelineLayout gradientPipelineLayout;
 
- private:
+private:
   AllocatedImage drawImage;
   VkExtent2D drawExtent;
   VmaAllocator allocator;
 
   bool stopRendering;
-  SDL_Window* window;
+  SDL_Window *window;
   bool initialized;
   VkInstance instance;
   VkDebugUtilsMessengerEXT debugMessenger;
@@ -64,14 +64,14 @@ class VulkanEngine {
   VkDescriptorSet drawImageDescriptors;
   VkDescriptorSetLayout drawImageDescriptorLayout;
 
- public:
+public:
   void Init();
   void Run();
   void Cleanup();
-  FrameData& GetCurrentFrame();
+  FrameData &GetCurrentFrame();
   void Draw();
 
- private:
+private:
   void initWindow();
   void initVulkan();
   void initSwapchain();
@@ -81,7 +81,7 @@ class VulkanEngine {
   void initPipelines();
   void initBackgroundPipelines();
 
- private:
+private:
   void createSwapchain(uint32_t width, uint32_t height);
   void destroySwapchain();
   void drawBackground(VkCommandBuffer cmd);

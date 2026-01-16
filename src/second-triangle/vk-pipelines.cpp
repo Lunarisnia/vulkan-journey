@@ -1,7 +1,8 @@
 #include "second-triangle/vk-pipelines.hpp"
 #include <fstream>
-bool VulkanPipelines::LoadShaderModule(const char* filePath, VkDevice device,
-                                       VkShaderModule* outShaderModule) {
+#include <vector>
+bool VulkanPipelines::LoadShaderModule(const char *filePath, VkDevice device,
+                                       VkShaderModule *outShaderModule) {
   // open the file. With cursor at the end
   std::ifstream file(filePath, std::ios::ate | std::ios::binary);
 
@@ -21,7 +22,7 @@ bool VulkanPipelines::LoadShaderModule(const char* filePath, VkDevice device,
   file.seekg(0);
 
   // load the entire file into the buffer
-  file.read((char*)buffer.data(), fileSize);
+  file.read((char *)buffer.data(), fileSize);
 
   // now that the file is loaded into the buffer, we can close it
   file.close();
