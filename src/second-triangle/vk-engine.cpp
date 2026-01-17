@@ -1,7 +1,5 @@
 #include "second-triangle/vk-engine.hpp"
-#include <cstdint>
 #include "SDL.h"
-#include <thread>
 #include "SDL_video.h"
 #include "SDL_vulkan.h"
 #include "VkBootstrap.h"
@@ -10,6 +8,9 @@
 #include "second-triangle/vk-initializer.hpp"
 #include "second-triangle/vk-pipelines.hpp"
 #include "vulkan/vulkan_core.h"
+#include <cmath>
+#include <cstdint>
+#include <thread>
 void VulkanEngine::Init() {
   initWindow();
   initVulkan();
@@ -31,7 +32,8 @@ void VulkanEngine::Run() {
     // Handle events on queue
     while (SDL_PollEvent(&e) != 0) {
       // close the window when user alt-f4s or clicks the X button
-      if (e.type == SDL_QUIT) bQuit = true;
+      if (e.type == SDL_QUIT)
+        bQuit = true;
 
       if (e.type == SDL_WINDOWEVENT) {
         if (e.window.event == SDL_WINDOWEVENT_MINIMIZED) {
@@ -57,7 +59,7 @@ void VulkanEngine::Cleanup() {
   if (initialized) {
     vkDeviceWaitIdle(device);
 
-    for (FrameData& frame : frames) {
+    for (FrameData &frame : frames) {
       vkDestroyCommandPool(device, frame.commandPool, nullptr);
 
       vkDestroyFence(device, frame.renderFence, nullptr);
@@ -111,6 +113,9 @@ void VulkanEngine::Draw() {
       VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 
   vkBeginCommandBuffer(cmd, &cmdBeginInfo);
+
+  drawExtent.width = drawImage.imageExtent.width;
+  drawExtent.height = drawImage.imageExtent.height;
 
   // This render to a render target then copy the image to the presentable
   // swapchain
@@ -181,19 +186,32 @@ void VulkanEngine::Draw() {
 void VulkanEngine::drawBackground(VkCommandBuffer cmd) {
   // make a clear-color from frame number. This will flash with a 120 frame
   // period.
-  VkClearColorValue clearValue;
-  float flash = std::abs(std::sin(frameNumber / 120.f));
-  clearValue = {{0.0f, 0.0f, flash, 1.0f}};
+  // VkClearColorValue clearValue;
+  // float flash = std::abs(std::sin(frameNumber / 120.f));
+  // clearValue = {{0.0f, 0.0f, flash, 1.0f}};
+  //
+  // VkImageSubresourceRange clearRange =
+  //     VulkanInit::ImageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT);
+  //
+  // // clear image
+  // vkCmdClearColorImage(cmd, drawImage.image, VK_IMAGE_LAYOUT_GENERAL,
+  //                      &clearValue, 1, &clearRange);
 
-  VkImageSubresourceRange clearRange =
-      VulkanInit::ImageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT);
+  // bind the gradient drawing compute pipeline
+  vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, gradientPipeline);
 
-  // clear image
-  vkCmdClearColorImage(cmd, drawImage.image, VK_IMAGE_LAYOUT_GENERAL,
-                       &clearValue, 1, &clearRange);
+  // bind the descriptor set containing the draw image for the compute pipeline
+  vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE,
+                          gradientPipelineLayout, 0, 1, &drawImageDescriptors,
+                          0, nullptr);
+
+  // execute the compute pipeline dispatch. We are using 16x16 workgroup size so
+  // we need to divide by it
+  vkCmdDispatch(cmd, std::ceil(drawExtent.width / 16.0),
+                std::ceil(drawExtent.height / 16.0), 1);
 }
 
-FrameData& VulkanEngine::GetCurrentFrame() {
+FrameData &VulkanEngine::GetCurrentFrame() {
   return frames[frameNumber % FRAME_OVERLAP];
 }
 
