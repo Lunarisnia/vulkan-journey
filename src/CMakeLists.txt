@@ -1,5 +1,5 @@
 # collect all imgui files
-# file(GLOB SOURCES vendor/imgui/*.cpp)
+file(GLOB IMGUI_SOURCES vendor/imgui/*.cpp)
 
 # Add the source files
 add_executable(${PROJECT_NAME} 
@@ -20,10 +20,10 @@ add_executable(${PROJECT_NAME}
 	# core/shader/shader.cpp
 
 	# Imgui
-	# ${SOURCES}
-	# vendor/imgui/backends/imgui_impl_opengl3.cpp
-	# vendor/imgui/backends/imgui_impl_glfw.cpp
-	# vendor/imgui/misc/cpp/imgui_stdlib.cpp
+	${IMGUI_SOURCES}
+	vendor/imgui/backends/imgui_impl_vulkan.cpp
+	vendor/imgui/backends/imgui_impl_sdlrenderer2.cpp
+	vendor/imgui/misc/cpp/imgui_stdlib.cpp
 )
 
 # inlcude
