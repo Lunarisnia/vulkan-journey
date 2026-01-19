@@ -11,8 +11,8 @@ VkFenceCreateInfo VulkanInit::FenceCreateInfo(VkFenceCreateFlags flags) {
   return fenceInfo;
 }
 
-VkSemaphoreCreateInfo VulkanInit::SemaphoreCreateInfo(
-    VkSemaphoreCreateFlags flags) {
+VkSemaphoreCreateInfo
+VulkanInit::SemaphoreCreateInfo(VkSemaphoreCreateFlags flags) {
   VkSemaphoreCreateInfo info = {};
   info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
   info.pNext = nullptr;
@@ -22,8 +22,8 @@ VkSemaphoreCreateInfo VulkanInit::SemaphoreCreateInfo(
   return info;
 }
 
-VkCommandBufferBeginInfo VulkanInit::CommandBufferBeginInfo(
-    VkCommandBufferUsageFlags flags) {
+VkCommandBufferBeginInfo
+VulkanInit::CommandBufferBeginInfo(VkCommandBufferUsageFlags flags) {
   VkCommandBufferBeginInfo info = {};
   info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
   info.pNext = nullptr;
@@ -34,8 +34,8 @@ VkCommandBufferBeginInfo VulkanInit::CommandBufferBeginInfo(
   return info;
 }
 
-VkImageSubresourceRange VulkanInit::ImageSubresourceRange(
-    VkImageAspectFlags aspectMask) {
+VkImageSubresourceRange
+VulkanInit::ImageSubresourceRange(VkImageAspectFlags aspectMask) {
   VkImageSubresourceRange subImage{};
   subImage.aspectMask = aspectMask;
   subImage.baseMipLevel = 0;
@@ -46,8 +46,9 @@ VkImageSubresourceRange VulkanInit::ImageSubresourceRange(
   return subImage;
 }
 
-VkSemaphoreSubmitInfo VulkanInit::SemaphoreSubmitInfo(
-    VkPipelineStageFlags2 stageMask, VkSemaphore semaphore) {
+VkSemaphoreSubmitInfo
+VulkanInit::SemaphoreSubmitInfo(VkPipelineStageFlags2 stageMask,
+                                VkSemaphore semaphore) {
   VkSemaphoreSubmitInfo submitInfo{};
   submitInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
   submitInfo.pNext = nullptr;
@@ -59,8 +60,8 @@ VkSemaphoreSubmitInfo VulkanInit::SemaphoreSubmitInfo(
   return submitInfo;
 }
 
-VkCommandBufferSubmitInfo VulkanInit::CommandBufferSubmitInfo(
-    VkCommandBuffer cmd) {
+VkCommandBufferSubmitInfo
+VulkanInit::CommandBufferSubmitInfo(VkCommandBuffer cmd) {
   VkCommandBufferSubmitInfo info{};
   info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO;
   info.pNext = nullptr;
@@ -70,9 +71,9 @@ VkCommandBufferSubmitInfo VulkanInit::CommandBufferSubmitInfo(
   return info;
 }
 
-VkSubmitInfo2 VulkanInit::SubmitInfo(VkCommandBufferSubmitInfo* cmd,
-                                     VkSemaphoreSubmitInfo* signalSemaphoreInfo,
-                                     VkSemaphoreSubmitInfo* waitSemaphoreInfo) {
+VkSubmitInfo2 VulkanInit::SubmitInfo(VkCommandBufferSubmitInfo *cmd,
+                                     VkSemaphoreSubmitInfo *signalSemaphoreInfo,
+                                     VkSemaphoreSubmitInfo *waitSemaphoreInfo) {
   VkSubmitInfo2 info = {};
   info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2;
   info.pNext = nullptr;
@@ -115,8 +116,9 @@ VkImageCreateInfo VulkanInit::ImageCreateInfo(VkFormat format,
   return info;
 }
 
-VkImageViewCreateInfo VulkanInit::ImageViewCreateInfo(
-    VkFormat format, VkImage image, VkImageAspectFlags aspectFlags) {
+VkImageViewCreateInfo
+VulkanInit::ImageViewCreateInfo(VkFormat format, VkImage image,
+                                VkImageAspectFlags aspectFlags) {
   // build a image-view for the depth image to use for rendering
   VkImageViewCreateInfo info = {};
   info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -132,4 +134,41 @@ VkImageViewCreateInfo VulkanInit::ImageViewCreateInfo(
   info.subresourceRange.aspectMask = aspectFlags;
 
   return info;
+}
+
+VkRenderingAttachmentInfo VulkanInit::AttachmentInfo(
+    VkImageView view, VkClearValue *clear,
+    VkImageLayout layout /*= VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL*/) {
+  VkRenderingAttachmentInfo colorAttachment{};
+  colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+  colorAttachment.pNext = nullptr;
+
+  colorAttachment.imageView = view;
+  colorAttachment.imageLayout = layout;
+  colorAttachment.loadOp =
+      clear ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
+  colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+  if (clear) {
+    colorAttachment.clearValue = *clear;
+  }
+
+  return colorAttachment;
+}
+
+VkRenderingInfo
+VulkanInit::RenderingInfo(VkExtent2D renderExtent,
+                          VkRenderingAttachmentInfo *colorAttachment,
+                          VkRenderingAttachmentInfo *depthAttachment) {
+  VkRenderingInfo renderInfo{};
+  renderInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+  renderInfo.pNext = nullptr;
+
+  renderInfo.renderArea = VkRect2D{VkOffset2D{0, 0}, renderExtent};
+  renderInfo.layerCount = 1;
+  renderInfo.colorAttachmentCount = 1;
+  renderInfo.pColorAttachments = colorAttachment;
+  renderInfo.pDepthAttachment = depthAttachment;
+  renderInfo.pStencilAttachment = nullptr;
+
+  return renderInfo;
 }

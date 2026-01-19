@@ -64,6 +64,10 @@ private:
   VkDescriptorSet drawImageDescriptors;
   VkDescriptorSetLayout drawImageDescriptorLayout;
 
+  VkFence immFence;
+  VkCommandBuffer immCommandBuffer;
+  VkCommandPool immCommandPool;
+
 public:
   void Init();
   void Run();
@@ -80,9 +84,12 @@ private:
   void initDescriptors();
   void initPipelines();
   void initBackgroundPipelines();
+  void initImgui();
 
 private:
   void createSwapchain(uint32_t width, uint32_t height);
   void destroySwapchain();
   void drawBackground(VkCommandBuffer cmd);
+  void immediateSubmit(std::function<void(VkCommandBuffer cmd)> &&function);
+  void drawImgui(VkCommandBuffer cmd, VkImageView targetImageView);
 };

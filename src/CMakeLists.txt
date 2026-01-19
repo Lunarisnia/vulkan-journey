@@ -22,7 +22,7 @@ add_executable(${PROJECT_NAME}
 	# Imgui
 	${IMGUI_SOURCES}
 	vendor/imgui/backends/imgui_impl_vulkan.cpp
-	vendor/imgui/backends/imgui_impl_sdlrenderer2.cpp
+	vendor/imgui/backends/imgui_impl_sdl2.cpp
 	vendor/imgui/misc/cpp/imgui_stdlib.cpp
 )
 
